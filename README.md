@@ -3,7 +3,7 @@ Das Coding-Projekt des Informatikkurs
 
 Gedcom to .csv conversion: Kai
 
-Klasse entwickeln: Justus K, Birk, Martin, Justus W
+Klasse entwickeln: Birk, Martin, Justus W
 
 Stammbaum visualisieren: Ivan, Timo, Jesper
 

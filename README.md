@@ -1,5 +1,5 @@
 # Rootsrevealed
-Das Coding-Projekt des Informatikkurs
+Das Coding-Projekt des Informatikkurses
 
 Gedcom to .csv conversion: Kai
 

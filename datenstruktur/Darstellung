@@ -1,52 +1,60 @@
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 
-# Funktion zum Hochladen einer Datei
-def upload_file():
+# Funktion für "Datei auswählen"-Button
+def choose_file():
     file_path = filedialog.askopenfilename(
-        title="Datei auswählen",
-        filetypes=[("GEDCOM-Dateien", "*.gedcom"), ("Alle Dateien", "*.*")]
+        title="Wähle eine GEDCOM-Datei aus",
+        filetypes=[("GEDCOM-Dateien", "*.ged"), ("Alle Dateien", "*.*")]
     )
     if file_path:
-        print(f"Datei hochgeladen: {file_path}")
+        messagebox.showinfo("Datei ausgewählt", f"Datei: {file_path}")
+
+# Funktion für "Datei ablegen"-Button
+def drop_file():
+    messagebox.showinfo("Datei ablegen", "Funktion 'Datei ablegen' ist noch nicht implementiert.")
 
 # Hauptfenster erstellen
 root = tk.Tk()
-root.title("Roots Revealed")
-root.geometry("800x600")
-root.configure(bg="#292929")  # Hintergrundfarbe
+root.title("Roots Revealed - Ancestry Research")
+root.geometry("800x600")  # Fenstergröße festlegen
+root.resizable(False, False)
 
 # Hintergrundbild laden
-image_path = r"/Users/timo.shin/Downloads/startbildschirm.1.png"  # Pfad zum Hintergrundbild
-bg_image = Image.open(image_path)
-bg_image = bg_image.resize((800, 600), Image.Resampling.LANCZOS)  # Bildgröße anpassen
+background_image_path = "/Users/timo.shin/Downloads/startbildschirm.1.png"  # Pfad zu Ihrem hochgeladenen Bild
+bg_image = Image.open(background_image_path)
+bg_image = bg_image.resize((800, 600), Image.Resampling.LANCZOS)  # Größe anpassen
 bg_photo = ImageTk.PhotoImage(bg_image)
 
-# Hintergrundbild als Label einfügen
-bg_label = tk.Label(root, image=bg_photo)
-bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
+# Canvas erstellen und Hintergrundbild setzen
+canvas = tk.Canvas(root, width=800, height=600)
+canvas.pack(fill="both", expand=True)
+canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
-# Button "Datei auswählen" auf dem Bild positionieren
-upload_button = tk.Button(
-    root,
-    text="Datei auswählen",
-    font=("Arial", 12),
-    bg="#d9a66c",
-    fg="white",
-    command=upload_file
+# Button-Bilder laden
+choose_file_image_path = "/Users/timo.shin/Downloads/Bild.png"  # Ersetzen mit Ihrem "Datei auswählen"-Button-Bild
+drop_file_image_path = "/path/to/drop_file_button.png"  # Ersetzen mit Ihrem "Datei ablegen"-Button-Bild
+
+choose_file_image = Image.open(choose_file_image_path)
+choose_file_photo = ImageTk.PhotoImage(choose_file_image)
+
+drop_file_image = Image.open(drop_file_image_path)
+drop_file_photo = ImageTk.PhotoImage(drop_file_image)
+
+# "Datei auswählen"-Button mit Bild
+choose_file_btn = tk.Button(
+    root, image=choose_file_photo, command=choose_file,
+    borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
 )
-upload_button.place(x=300, y=420, width=200, height=40)  # Exakte Position und Größe
+choose_file_btn.place(x=340, y=310)  # Position passend zum Bild
 
-# Text "Datei ablegen" als Label auf dem Bild positionieren
-drop_label = tk.Label(
-    root,
-    text="Datei ablegen",
-    font=("Arial", 14),
-    bg="#404040",
-    fg="white"
+# "Datei ablegen"-Button mit Bild
+drop_file_btn = tk.Button(
+    root, image=drop_file_photo, command=drop_file,
+    borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
 )
-drop_label.place(x=300, y=470, width=200, height=40)  # Exakte Position und Größe
+drop_file_btn.place(x=360, y=370)  # Position passend zum Bild
 
-# Anwendung starten
+# Hauptfenster starten
 root.mainloop()

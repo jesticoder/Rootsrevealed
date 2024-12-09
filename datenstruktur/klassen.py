@@ -1,5 +1,5 @@
 class Individual:                                                                                                       # Klasse aller einzelner Menschen
-    def __innit__(birth = None,death = None,info = {},last_name = "",first_name = "",child_in = None,parent_in = None): # birth und death haben datentyp event, child_in und parent_in haben datentyp Family
+    def __innit__(self, birth = None,death = None,info = {},last_name = "",first_name = "",child_in = None,parent_in = None): # birth und death haben datentyp event, child_in und parent_in haben datentyp Family
         self.birth = birth
         self.death = death
         self.info = info                                                                                               # Info soll alles rein was in diesen texten in gedcom steht 
@@ -8,22 +8,22 @@ class Individual:                                                               
         self.child_in = child_in
         self.parent_in = parent_in
         
-    def get_children():                                                                                                 # gibt den Wert kinder von diesem Individuum zurück
+    def get_children(self):                                                                                                 # gibt den Wert kinder von diesem Individuum zurück
         return self.parent_in.children
 
-    def get_parents():                                                                                                  # selbes für Eltern
+    def get_parents(self):                                                                                                  # selbes für Eltern
         return [self.child_in.mother,self.child_in.father]
     
 
 class Family:                                                                                                           # stellt die Verbindung zwischen Individuen dar
-    def __innit__(mother = None,father = None,children = []):
+    def __innit__(self, mother = None,father = None,children = []):
         self.mother = mother
         self.father = father
         self.children = children
 
 
 class Event:                                                                                                            # stellt Ereignisse wie den Tod und die Geburt eines Individuums dar
-    def __innit__(date = "",place = "",info = {}):
+    def __innit__(self, date = "",place = "",info = {}):
         self.place = place
         self.date = date
         self.info = info

@@ -52,13 +52,21 @@ class Family:
             
             if isinstance(tag.get_tag(), tags.GEDCOM_TAG_WIFE):
                 self.__wife_pointer = tag.get_value()
+
+    def get_husband(self, parser) -> Individual:
+        if self.__husband:
+            return self.__husband
         
+        self.__husband = Individual.from_pointer(self.__husband_pointer)
+        return self.__husband
+    
     def get_wife(self, parser) -> Individual:
         if self.__wife:
             return self.__wife
         
-        return Individual.from_pointer(self.__wife_pointer)
-        
+        self.__wife = Individual.from_pointer(self.__wife_pointer)
+        return self.__wife
+    
     def get_element(self):
         return self.__element
 

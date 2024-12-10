@@ -5,7 +5,10 @@ from python_gedcom_2.element.family import FamilyElement
 from python_gedcom_2.element.event_detail import EventDetail
 from python_gedcom_2.element.date import DateElement
 from python_gedcom_2.parser import Parser
+from typing import TypeVar
 import python_gedcom_2.tags as tags
+
+T = TypeVar("T", bound="Individual")
 
 class Event:
     """Klasse die ein Event in Gedcom darstellt, also ein Tag mit einem Datum und oder Ort
@@ -13,7 +16,7 @@ class Event:
     def __init__(self, event: EventDetail):
         self.__event = event
         
-    def get_raw_event(self):
+    def get_raw_event(self) -> EventDetail:
         return self.__event
     
     def has_date(self) -> bool:
@@ -30,7 +33,7 @@ class Event:
         
         for child in self.__event.get_child_elements():
             if isinstance(child, DateElement):
-                return child 
+                return child
         
 
 class Family:
@@ -47,27 +50,32 @@ class Family:
             if isinstance(tag, EventDetail):
                 self.__events.append(Event(tag))
                 
-            if isinstance(tag.get_tag(), tags.GEDCOM_TAG_HUSBAND):
+            if tag.get_tag() == tags.GEDCOM_TAG_HUSBAND:
                 self.__husband_pointer = tag.get_value()
             
-            if isinstance(tag.get_tag(), tags.GEDCOM_TAG_WIFE):
+            if tag.get_tag() == tags.GEDCOM_TAG_WIFE:
                 self.__wife_pointer = tag.get_value()
 
-    def get_husband(self, parser) -> Individual:
+    def get_husband(self, parser) -> T | None:
         if self.__husband:
             return self.__husband
         
-        self.__husband = Individual.from_pointer(self.__husband_pointer)
+        if self.__husband_pointer == "":
+            return None
+        self.__husband = Individual.from_pointer(parser, self.__husband_pointer)
         return self.__husband
     
-    def get_wife(self, parser) -> Individual:
+    def get_wife(self, parser) -> T | None:
         if self.__wife:
             return self.__wife
         
-        self.__wife = Individual.from_pointer(self.__wife_pointer)
+        if self.__wife_pointer == "":
+            return None
+
+        self.__wife = Individual.from_pointer(parser, self.__wife_pointer)
         return self.__wife
     
-    def get_element(self):
+    def get_raw_element(self) -> FamilyElement:
         return self.__element
 
 
@@ -77,11 +85,11 @@ class Individual:
     def __init__(self, element: IndividualElement):
         self.__element = element 
     
-    def get_element(self):
+    def get_raw_element(self) -> IndividualElement:
         return self.__element
 
-    @staticmethod
-    def from_pointer(parser: Parser, pointer: str) -> Individual | None:
+    @classmethod
+    def from_pointer(cls: T, parser: Parser, pointer: str) -> T | None:
         """Erstellt ein Individual aus einem Pointer `@I0@`. 
 
         Args:
@@ -95,8 +103,7 @@ class Individual:
         if not isinstance(element, IndividualElement):
             return None
         
-        return Individual(element)
-    
+        return cls(element)    
 
     @staticmethod
     def is_individual(element: Element) -> bool:

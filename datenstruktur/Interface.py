@@ -22,7 +22,7 @@ root.geometry("800x600")  # Fenstergröße festlegen
 root.resizable(False, False)
 
 # Hintergrundbild laden
-background_image_path = "/Users/timo.shin/Downloads/startbildschirm.1.png"  # Pfad zu Ihrem hochgeladenen Bild
+background_image_path = "h:\Downloads\startbildschirm.1.png"  # Pfad zu Ihrem hochgeladenen Bild
 bg_image = Image.open(background_image_path)
 bg_image = bg_image.resize((800, 600), Image.Resampling.LANCZOS)  # Größe anpassen
 bg_photo = ImageTk.PhotoImage(bg_image)
@@ -33,8 +33,8 @@ canvas.pack(fill="both", expand=True)
 canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
 # Button-Bilder laden
-choose_file_image_path = "/Users/timo.shin/Downloads/Bild.png"  # Ersetzen mit Ihrem "Datei auswählen"-Button-Bild
-drop_file_image_path = "/path/to/drop_file_button.png"  # Ersetzen mit Ihrem "Datei ablegen"-Button-Bild
+choose_file_image_path = "h:\Pictures\Fortnite.png"  # Ersetzen mit Ihrem "Datei auswählen"-Button-Bild
+drop_file_image_path = "h:\Downloads\startbildschirm.1.png"  # Ersetzen mit Ihrem "Datei ablegen"-Button-Bild
 
 choose_file_image = Image.open(choose_file_image_path)
 choose_file_photo = ImageTk.PhotoImage(choose_file_image)

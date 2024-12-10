@@ -11,50 +11,74 @@ def choose_file():
     if file_path:
         messagebox.showinfo("Datei ausgewählt", f"Datei: {file_path}")
 
-# Funktion für "Datei ablegen"-Button
+# Funktion für Drag-and-Drop-Feld (nur als Platzhalter)
 def drop_file():
-    messagebox.showinfo("Datei ablegen", "Funktion 'Datei ablegen' ist noch nicht implementiert.")
+    messagebox.showinfo("Drag-and-Drop", "Datei abgelegt!")
+
+# Funktion zum Anpassen der Größe und Position von Canvas, Drag-and-Drop-Feld und Buttons
+def resize_elements(event):
+    # Neue Fenstergröße
+    width, height = root.winfo_width(), root.winfo_height()
+    
+    # Canvas auf Fullscreen einstellen
+    canvas.config(width=width, height=height)
+    
+    # Hintergrundbild dynamisch skalieren
+    resized_bg = bg_image.resize((width, height), Image.Resampling.LANCZOS)
+    bg_photo_resized = ImageTk.PhotoImage(resized_bg)
+    canvas.itemconfig(bg_image_id, image=bg_photo_resized)
+    canvas.image = bg_photo_resized  # Verhindert das Entfernen des Bildes durch Garbage Collection
+
+    # Position und Größe des Drag-and-Drop-Feldes
+    drop_zone_width = int(width * 0.6)  # 60% der Fensterbreite
+    drop_zone_height = int(height * 0.2)  # 20% der Fensterhöhe
+    drop_zone_x = int(width * 0.2)  # Horizontal zentriert
+    drop_zone_y = int(height * 0.6)  # Im unteren Drittel
+
+    # Anpassen des Drag-and-Drop-Rechtecks
+    canvas.coords(drop_zone_rect, drop_zone_x, drop_zone_y,
+                  drop_zone_x + drop_zone_width, drop_zone_y + drop_zone_height)
+    
+    # Position und Größe des "Datei auswählen"-Buttons
+    btn_width = int(drop_zone_width * 0.3)  # 30% der Breite der Drag-and-Drop-Zone
+    btn_height = int(drop_zone_height * 0.5)  # 50% der Höhe der Drag-and-Drop-Zone
+    btn_x = drop_zone_x + (drop_zone_width - btn_width) // 2
+    btn_y = drop_zone_y + (drop_zone_height - btn_height) // 2
+
+    resized_choose_file = choose_file_image.resize((btn_width, btn_height), Image.Resampling.LANCZOS)
+    choose_file_photo_resized = ImageTk.PhotoImage(resized_choose_file)
+    choose_file_btn.config(image=choose_file_photo_resized)
+    choose_file_btn.image = choose_file_photo_resized
+    choose_file_btn.place(x=btn_x, y=btn_y)
 
 # Hauptfenster erstellen
 root = tk.Tk()
 root.title("Roots Revealed - Ancestry Research")
-root.geometry("800x600")  # Fenstergröße festlegen
-root.resizable(False, False)
+root.state("zoomed")  # Startet im Fullscreen-Modus
 
 # Hintergrundbild laden
-background_image_path = "h:\Downloads\startbildschirm.1.png"  # Pfad zu Ihrem hochgeladenen Bild
+background_image_path = "h:\\Downloads\\startbildschirm.1.png"
 bg_image = Image.open(background_image_path)
-bg_image = bg_image.resize((800, 600), Image.Resampling.LANCZOS)  # Größe anpassen
 bg_photo = ImageTk.PhotoImage(bg_image)
 
 # Canvas erstellen und Hintergrundbild setzen
-canvas = tk.Canvas(root, width=800, height=600)
+canvas = tk.Canvas(root)
 canvas.pack(fill="both", expand=True)
-canvas.create_image(0, 0, image=bg_photo, anchor="nw")
+bg_image_id = canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
-# Button-Bilder laden
-choose_file_image_path = "h:\Pictures\Fortnite.png"  # Ersetzen mit Ihrem "Datei auswählen"-Button-Bild
-drop_file_image_path = "h:\Downloads\startbildschirm.1.png"  # Ersetzen mit Ihrem "Datei ablegen"-Button-Bild
+# Drag-and-Drop-Feld als Rechteck hinzufügen
+drop_zone_rect = canvas.create_rectangle(0, 0, 0, 0, fill="#d9d9d9", outline="#aaa", width=2)
 
-choose_file_image = Image.open(choose_file_image_path)
-choose_file_photo = ImageTk.PhotoImage(choose_file_image)
+# Button-Bild für "Datei auswählen"
+choose_file_image = Image.open("h:\\Downloads\\datei auswhlen.png")
 
-drop_file_image = Image.open(drop_file_image_path)
-drop_file_photo = ImageTk.PhotoImage(drop_file_image)
-
-# "Datei auswählen"-Button mit Bild
+# Klickbarer "Datei auswählen"-Button innerhalb des Drag-and-Drop-Feldes
 choose_file_btn = tk.Button(
-    root, image=choose_file_photo, command=choose_file,
-    borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
+    root, command=choose_file, borderwidth=0, bg="#d9d9d9", activebackground="#c9c9c9"
 )
-choose_file_btn.place(x=340, y=310)  # Position passend zum Bild
 
-# "Datei ablegen"-Button mit Bild
-drop_file_btn = tk.Button(
-    root, image=drop_file_photo, command=drop_file,
-    borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
-)
-drop_file_btn.place(x=360, y=370)  # Position passend zum Bild
+# Eventlistener für Fenstergröße
+root.bind("<Configure>", resize_elements)
 
 # Hauptfenster starten
 root.mainloop()

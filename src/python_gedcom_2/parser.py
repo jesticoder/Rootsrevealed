@@ -57,14 +57,12 @@ class Parser(object):
         self.__element_list = []
         self.__element_dictionary = {}
 
-    def get_element_by_pointer(self, pointer):
+    def get_element_by_pointer(self, pointer: str) -> Element | None:
         """Returns the element that has the provided pointer. Raises an exception if that pointer doesn't exist.
-        :type pointer: string
-        :rtype: Element
         """
         element_dictionary = self.get_element_dictionary()
         if pointer not in element_dictionary:
-            raise PointerNotFoundException("No element with the pointer " + pointer + " was found.")
+            return None
         else:
             return element_dictionary[pointer]
 
@@ -464,6 +462,12 @@ class Parser(object):
                     return potential_path
 
         return None
+
+    def convert_pointers_to_elements(self, *args, pointers: List[str] | None=None) -> List[Element | None]:
+        if pointers is None:
+            pointers = []
+        pointers.extend(*args)
+        return [self.get_element_by_pointer(pointer) for pointer in pointers]
 
     def get_family_members(self, family, members_type=FAMILY_MEMBERS_TYPE_ALL):
         """Return array of family members: individual, spouse, and children

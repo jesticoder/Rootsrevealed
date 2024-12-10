@@ -27,8 +27,11 @@ class Individual:
     """Klasse aller einzelner Menschen
     """
     def __init__(self, element: IndividualElement):
-        self.__element = element
-        
+        self.__element = element 
+    
     def get_element(self):
         return self.__element
 
+    @staticmethod
+    def is_individual(element: Element) -> bool:
+        return isinstance(element, IndividualElement)

@@ -14,6 +14,9 @@ class Individual:                                                               
     def get_parents(self):                                                                                                  # selbes für Eltern
         return [self.child_in.mother,self.child_in.father]
     
+    def get_generation(self):
+
+
 
 class Family:                                                                                                           # stellt die Verbindung zwischen Individuen dar
     def __init__(self, mother = None,father = None,children = []):

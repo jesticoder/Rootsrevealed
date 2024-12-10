@@ -32,29 +32,28 @@ canvas = tk.Canvas(root, width=800, height=600)
 canvas.pack(fill="both", expand=True)
 canvas.create_image(0, 0, image=bg_photo, anchor="nw")
 
-# Button-Bilder laden
-choose_file_image_path = "h:\Pictures\Fortnite.png"  # Ersetzen mit Ihrem "Datei auswählen"-Button-Bild
-drop_file_image_path = "h:\Downloads\startbildschirm.1.png"  # Ersetzen mit Ihrem "Datei ablegen"-Button-Bild
-
-choose_file_image = Image.open(choose_file_image_path)
+# Button-Bilder laden und skalieren
+choose_file_image = Image.open("h:\Downloads\Müll.jpg")  # Pfad zum Bild "Datei auswählen"
+choose_file_image = choose_file_image.resize((138, 41), Image.Resampling.LANCZOS)  # Zielgröße skalieren
 choose_file_photo = ImageTk.PhotoImage(choose_file_image)
 
-drop_file_image = Image.open(drop_file_image_path)
+drop_file_image = Image.open("h:\Downloads\preview_datei ablegen.png")  # Pfad zum Bild "Datei ablegen"
+drop_file_image = drop_file_image.resize((138, 41), Image.Resampling.LANCZOS)  # Zielgröße skalieren
 drop_file_photo = ImageTk.PhotoImage(drop_file_image)
 
-# "Datei auswählen"-Button mit Bild
+# Buttons anpassen
 choose_file_btn = tk.Button(
     root, image=choose_file_photo, command=choose_file,
     borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
 )
-choose_file_btn.place(x=340, y=310)  # Position passend zum Bild
+choose_file_btn.place(x=330, y=370)
 
-# "Datei ablegen"-Button mit Bild
 drop_file_btn = tk.Button(
     root, image=drop_file_photo, command=drop_file,
     borderwidth=0, bg="#2e2a27", activebackground="#2e2a27"
 )
-drop_file_btn.place(x=360, y=370)  # Position passend zum Bild
+drop_file_btn.place(x=330, y=435)
+
 
 # Hauptfenster starten
 root.mainloop()

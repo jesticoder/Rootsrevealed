@@ -49,32 +49,18 @@ class DateElement(Element):
         :rtype: A datetime object with the date and optionally time
         """
         if self.date_type == DateType.EXACT:
-            date_len = len(self.get_value().strip().split(" "))
-            if date_len == 3:
-                d = self.__parse_full_date_string(self.get_value())
-            elif date_len == 2:
-                d = self.__parse_month_year_string(self.get_value())
-            elif date_len == 1:
-                d = self.__parse_year_string(self.get_value())
-            else:
-                raise Exception(f"Malformed Date Value: {date_len} {self.get_value()}")
-
+            d = self.__parse_date_string(self.get_value())
             if self.has_time():
-                d.combine(d.date(), self.__parse_time_string(self.get_time().get_value()).time())
+                d.combine(d.date(), self.get_time().as_time())
+            return d
+        elif self.date_type == DateType.APPROXIMATE:
+            d = self.__parse_date_string(self.get_value()[3:].strip())
+            if self.has_time():
+                d.combine(d.date(), self.get_time().as_time())
             return d
 
-        elif self.date_type == DateType.PERIOD:
-            return None
-
-        elif self.date_type == DateType.RANGE:
-            return None
-
-        elif self.date_type == DateType.APPROXIMATE:
-            return None
-
-        elif self.date_type == DateType.UNKNOWN:
-            raise Exception("Tried to parse unknown date. Please check with is_unknown before trying to parse")
-
+        else:
+            raise Exception(f"DateElement '{self}' of type '{self.date_type}' cannot be represented as a single date.")
 
     def is_unknown(self) -> bool:
         return self.get_value().strip() == "Y"
@@ -85,18 +71,14 @@ class DateElement(Element):
     def get_time(self) -> TimeElement:
         return self.get_child_element_by_tag(tags.GEDCOM_TAG_TIME)
 
-    @staticmethod
-    def __parse_full_date_string(value: str) -> datetime:
-        return datetime.strptime(value.strip(), "%d %b %Y")
-
-    @staticmethod
-    def __parse_month_year_string(value: str) -> datetime:
-        return datetime.strptime(value.strip(), "%b %Y")
-
-    @staticmethod
-    def __parse_year_string(value: str) -> datetime:
-        return datetime.strptime(value.strip(), "%Y")
-
-    @staticmethod
-    def __parse_time_string(value: str) -> datetime:
-        return datetime.strptime(value, "%H:%M:%S.%f")
+    def __parse_date_string(self, value) -> datetime:
+        date_len = len(value.split(" "))
+        if date_len == 3:
+            d = datetime.strptime(value.strip(), "%d %b %Y")
+        elif date_len == 2:
+            d = datetime.strptime(value.strip(), "%b %Y")
+        elif date_len == 1:
+            d = datetime.strptime(value.strip(), "%Y")
+        else:
+            raise Exception(f"Malformed Date Value: {date_len} {self.get_value()}")
+        return d

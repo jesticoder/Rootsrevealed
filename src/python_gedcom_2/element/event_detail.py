@@ -16,12 +16,12 @@ class EventDetail(Element):
     def has_date(self) -> bool:
         """Returns True if this EventDetail has a DateElement as a child.
         """
-        return self._is_tag_present(tags.GEDCOM_TAG_DATE)
+        return self.is_tag_present(tags.GEDCOM_TAG_DATE)
 
     def has_place(self) -> bool:
         """Returns True if this EventDetail has a place specified as a child.
         """
-        return self._is_tag_present(tags.GEDCOM_TAG_PLACE)
+        return self.is_tag_present(tags.GEDCOM_TAG_PLACE)
 
     def get_date_element(self) -> DateElement | None:
         """Returns the DateElement of this EventDetail if it exists.

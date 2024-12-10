@@ -3,6 +3,7 @@
 import re as regex
 from typing import Tuple, List
 
+from python_gedcom_2.element.birth import BirthElement
 from python_gedcom_2.element.death import DeathElement
 from python_gedcom_2.element.element import Element
 import python_gedcom_2.tags
@@ -22,19 +23,19 @@ class IndividualElement(Element):
         """Checks if this individual is deceased
         :rtype: bool
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_DEATH)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_DEATH)
 
     def is_child(self):
         """Checks if this element is a child of a family
         :rtype: bool
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_CHILD)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_CHILD)
 
     def is_spouse(self):
         """Checks if this element is a spouse in a family
         :rtype: bool
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
 
     def is_private(self):
         """Checks if this individual is marked private
@@ -48,7 +49,7 @@ class IndividualElement(Element):
 
         return False
 
-    def get_name(self) -> Tuple[str, str]:
+    def get_name_as_tuple(self) -> Tuple[str, str]:
         """Returns an individual's names as a tuple: (`str` given_name, `str` surname)
         If this person has a suffix (e.g., 'Jr') it gets removed entirely.
         :rtype: tuple
@@ -90,6 +91,9 @@ class IndividualElement(Element):
 
         # If we reach here we are probably returning empty strings
         return given_name, surname
+
+    def get_name(self) -> str:
+        return " ".join(self.get_name_as_tuple())
 
     def get_all_names(self):
         return [a.get_value() for a in self.get_child_elements() if a.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_NAME]
@@ -161,8 +165,26 @@ class IndividualElement(Element):
 
         return occupation
 
+    def get_birth_element(self) -> BirthElement | None:
+        return self.get_child_element_by_tag(python_gedcom_2.tags.GEDCOM_TAG_BIRTH)
+
     def get_death_element(self) -> DeathElement | None:
         return self.get_child_element_by_tag(python_gedcom_2.tags.GEDCOM_TAG_DEATH)
 
     def get_events(self) -> List[EventDetail]:
         return [child for child in self.get_child_elements() if isinstance(child, EventDetail)]
+
+    def is_child_in_a_family(self) -> bool:
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_CHILD)
+
+    def get_parent_family_pointer(self) -> str | None:
+        """Returns the pointer to the family that this individual is a child of
+        """
+        if self.is_child_in_a_family():
+            return self.get_child_element_by_tag(python_gedcom_2.tags.GEDCOM_TAG_FAMILY_CHILD).get_value()
+        return None
+
+    def get_spouse_families_pointer(self) -> List[str]:
+        """Returns the pointer to the family that this individual is a child of
+        """
+        return [child.get_value() for child in self.get_child_elements() if child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE]

@@ -18,17 +18,17 @@ class FamilyElement(Element):
     def has_children(self) -> bool:
         """Returns whether there is at least one child in this family.
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_CHILD)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_CHILD)
 
     def has_husband(self) -> bool:
         """Returns whether the family has a husband
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_HUSBAND)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_HUSBAND)
 
     def has_wife(self) -> bool:
         """Returns whether the family has a husband
         """
-        return self._is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_WIFE)
+        return self.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_WIFE)
 
     def get_husband_pointer(self) -> str:
         """Returns the pointer to the husband individual or an empty string if the family has none

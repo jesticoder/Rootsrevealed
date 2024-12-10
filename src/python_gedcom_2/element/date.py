@@ -66,7 +66,7 @@ class DateElement(Element):
         return self.get_value().strip() == "Y"
 
     def has_time(self) -> bool:
-        return self._is_tag_present(tags.GEDCOM_TAG_TIME)
+        return self.is_tag_present(tags.GEDCOM_TAG_TIME)
 
     def get_time(self) -> TimeElement:
         return self.get_child_element_by_tag(tags.GEDCOM_TAG_TIME)

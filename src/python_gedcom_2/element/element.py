@@ -210,7 +210,7 @@ class Element(object):
         """
         self.__parent = element
 
-    def _is_tag_present(self, tag):
+    def is_tag_present(self, tag):
         for child in self.get_child_elements():
             if child.get_tag() == tag:
                 return True
@@ -243,8 +243,8 @@ class Element(object):
 
         return result
 
-    def get_child_element_by_tag(self, tag):
-        if self._is_tag_present(tag):
+    def get_child_element_by_tag(self, tag: str):
+        if self.is_tag_present(tag):
             for child in self.get_child_elements():
                 if child.get_tag() == tag:
                     return child

@@ -5,6 +5,7 @@ which can in return be manipulated.
 
 import re as regex
 from sys import version_info
+from typing import List, Tuple
 
 from python_gedcom_2.element_creator import ElementCreator
 
@@ -366,109 +367,84 @@ class Parser(object):
 
         return families
 
-    def get_ancestors(self, individual, ancestor_type="ALL"):
+    def get_ancestors(self, individual: IndividualElement) -> List[IndividualElement]:
         """Return elements corresponding to ancestors of an individual
-
-        Optional `ancestor_type`. Default "ALL" returns all ancestors, "NAT" can be
-        used to specify only natural (genetic) ancestors.
-
-        :type individual: IndividualElement
-        :type ancestor_type: str
-        :rtype: list of Element
         """
         if not isinstance(individual, IndividualElement):
             raise NotAnActualIndividualError(
                 "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
             )
 
-        parents = self.get_parents(individual, ancestor_type)
+        parents = self.get_parents(individual)
         ancestors = []
         ancestors.extend(parents)
 
         for parent in parents:
-            ancestors.extend(self.get_ancestors(parent, ancestor_type))
+            ancestors.extend(self.get_ancestors(parent))
 
         return ancestors
 
-    def get_parents(self, individual, parent_type="ALL"):
-        """Return elements corresponding to parents of an individual
-
-        Optional parent_type. Default "ALL" returns all parents. "NAT" can be
-        used to specify only natural (genetic) parents.
-
-        :type individual: IndividualElement
-        :type parent_type: str
-        :rtype: list of IndividualElement
+    def get_parents(self, individual: IndividualElement) -> Tuple[IndividualElement | None, IndividualElement | None]:
+        """Return elements corresponding to parents of an individual. (husband, wife)
         """
         if not isinstance(individual, IndividualElement):
             raise NotAnActualIndividualError(
                 "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
             )
 
-        parents = []
-        families = self.get_families(individual, python_gedcom_2.tags.GEDCOM_TAG_FAMILY_CHILD)
+        if not individual.is_child_in_a_family():
+            return None, None
 
-        for family in families:
-            if parent_type == "NAT":
-                for family_member in family.get_child_elements():
+        family = self.get_element_by_pointer(individual.get_parent_family_pointer())
 
-                    if family_member.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_CHILD \
-                       and family_member.get_value() == individual.get_pointer():
+        if not isinstance(family, FamilyElement):
+            return None, None
 
-                        for child in family_member.get_child_elements():
-                            if child.get_value() == "Natural":
-                                if child.get_tag() == python_gedcom_2.tags.GEDCOM_PROGRAM_DEFINED_TAG_MREL:
-                                    parents += self.get_family_members(family, python_gedcom_2.tags.GEDCOM_TAG_WIFE)
-                                elif child.get_tag() == python_gedcom_2.tags.GEDCOM_PROGRAM_DEFINED_TAG_FREL:
-                                    parents += self.get_family_members(family, python_gedcom_2.tags.GEDCOM_TAG_HUSBAND)
-            else:
-                parents += self.get_family_members(family, "PARENTS")
+        husband: IndividualElement | None = self.get_element_by_pointer(family.get_husband_pointer()) if family.has_husband() else None
+        wife: IndividualElement | None = self.get_element_by_pointer(family.get_wife_pointer()) if family.has_wife() else None
 
-        return parents
+        return husband, wife
 
-    def get_children(self, individual, child_type="ALL"):
-        """Return elements corresponding to children of an individual.
-
-        Optional child_type. Default "ALL" returns all children. "NAT" can be
-        used to specify only natural (genetic) children.
-
-        :type individual: IndividualElement
-        :type child_type: str
-        :rtype: list of IndividualElement
+    def get_natural_children(self, individual: IndividualElement) -> List[IndividualElement]:
+        """
+        Return a list of children of an individual that are directly related and not adopted.
         """
         if not isinstance(individual, IndividualElement):
             raise NotAnActualIndividualError(
                 "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
             )
 
-        children = []
+        children: List[IndividualElement] = []
         families = self.get_families(individual, python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
 
         for family in families:
-            if child_type == "NAT":
-                # Find our relationship to the children - is this parent male or female?
-                type_of_our_individual = None
-                for family_member in family.get_child_elements():  # Will look like "1 HUSB @I1@", "1 WIFE @I2@", or "1 CHIL @I3@"
-                    if family_member.get_value() == individual.get_pointer():
-                        if family_member.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_WIFE:
-                            type_of_our_individual = python_gedcom_2.tags.GEDCOM_PROGRAM_DEFINED_TAG_MREL
-                        elif family_member.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_HUSBAND:
-                            type_of_our_individual = python_gedcom_2.tags.GEDCOM_PROGRAM_DEFINED_TAG_FREL
-
-                for family_member in family.get_child_elements():  # Will look like "1 HUSB @I1@", "1 WIFE @I2@", or "1 CHIL @I3@"
-                    if family_member.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_CHILD:
-                        for child in family_member.get_child_elements():
-                            if child.get_value() == "Natural":
-                                if child.get_tag() == type_of_our_individual:
-                                    children.append(self.get_element_by_pointer(family_member.get_value()))
-            else:
-                children += self.get_family_members(family, python_gedcom_2.tags.GEDCOM_TAG_CHILD)
+            for pointer in family.get_children_pointers():
+                child = self.get_element_by_pointer(pointer)
+                if not child.is_tag_present(python_gedcom_2.tags.GEDCOM_TAG_ADOPTION) and isinstance(child, IndividualElement):
+                    children.append(child)
 
         return children
 
-    def find_path_to_ancestor(self, descendant, ancestor, path=None):
+    def get_descendants(self, individual: IndividualElement) -> List[IndividualElement]:
+        if not isinstance(individual, IndividualElement):
+            raise NotAnActualIndividualError(
+                "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
+            )
+
+        descendants: List[IndividualElement] = []
+        families = self.get_families(individual, python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
+        for family in families:
+            for pointer in family.get_children_pointers():
+                child = self.get_element_by_pointer(pointer)
+                if isinstance(child, IndividualElement):
+                    descendants.append(child)
+                    descendants.extend(self.get_descendants(child))
+
+        return descendants
+
+
+    def find_path_to_ancestor(self, descendant: IndividualElement, ancestor: IndividualElement, path=None) -> List[IndividualElement] | None:
         """Return path from descendant to ancestor
-        :rtype: object
         """
         if not isinstance(descendant, IndividualElement) or not isinstance(ancestor, IndividualElement):
             raise NotAnActualIndividualError(
@@ -481,7 +457,7 @@ class Parser(object):
         if path[-1].get_pointer() == ancestor.get_pointer():
             return path
         else:
-            parents = self.get_parents(descendant, "NAT")
+            parents = self.get_parents(descendant)
             for parent in parents:
                 potential_path = self.find_path_to_ancestor(parent, ancestor, path + [parent])
                 if potential_path is not None:

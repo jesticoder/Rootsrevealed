@@ -1,5 +1,5 @@
 class Individual:                                                                                                       # Klasse aller einzelner Menschen
-    def __innit__(self, birth = None,death = None,info = {},last_name = "",first_name = "",child_in = None,parent_in = None): # birth und death haben datentyp event, child_in und parent_in haben datentyp Family
+    def __init__(self, birth = None,death = None,info = {},last_name = "",first_name = "",child_in = None,parent_in = None): # birth und death haben datentyp event, child_in und parent_in haben datentyp Family
         self.birth = birth
         self.death = death
         self.info = info                                                                                               # Info soll alles rein was in diesen texten in gedcom steht 
@@ -16,14 +16,14 @@ class Individual:                                                               
     
 
 class Family:                                                                                                           # stellt die Verbindung zwischen Individuen dar
-    def __innit__(self, mother = None,father = None,children = []):
+    def __init__(self, mother = None,father = None,children = []):
         self.mother = mother
         self.father = father
         self.children = children
 
 
 class Event:                                                                                                            # stellt Ereignisse wie den Tod und die Geburt eines Individuums dar
-    def __innit__(self, date = "",place = "",info = {}):
+    def __init__(self, date = "",place = "",info = {}):
         self.place = place
         self.date = date
         self.info = info
@@ -33,8 +33,26 @@ class Event:                                                                    
 # example family
 
 
+# Ereignisse erstellen
+birth_mother = Event(date="1980", place="Berlin")
+birth_father = Event(date="1978", place="Hamburg")
+birth_child = Event(date="2006", place="Hannover")
 
-martin = Individual(Event("2006","Hannover"))    #wie zum fick macht man ohne death und info
+# Personen erstellen
+mother = Individual(birth=birth_mother, first_name="Anna", last_name="Müller")
+father = Individual(birth=birth_father, first_name="Peter", last_name="Müller")
+child = Individual(birth=birth_child, first_name="Martin", last_name="Müller")
 
+# Familie erstellen
+family = Family(mother=mother, father=father, children=[child])
+
+# Beziehungen setzen
+mother.parent_in = family
+father.parent_in = family
+child.child_in = family
+
+# Daten abrufen
+print(f"Martins Eltern: {[parent.first_name for parent in child.get_parents()]}")
+print(f"Anna's Kinder: {[kid.first_name for kid in mother.get_children()]}")
 
 

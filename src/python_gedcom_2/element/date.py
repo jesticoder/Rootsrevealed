@@ -1,80 +1,102 @@
 """GEDCOM element consisting of tag `gedcom.tags.GEDCOM_TAG_DATE`"""
 
+from datetime import datetime
+from enum import Enum
+from typing import List
+
+from python_gedcom_2 import tags
 from python_gedcom_2.element.element import Element
+from python_gedcom_2.element.time import TimeElement
 
 
 RETURN_FIRST_DATE = "first"
 RETURN_SECOND_DATE = "second"
 
+period_prefixes: List[str] = ["FROM", "TO"]
+
+approximate_prefixes: List[str]  = ["ABT", "CAL", "EST"]
+
+range_prefixes: List[str]  = ["BET", "AFT", "BEF"]
+
+
+class DateType(Enum):
+    UNKNOWN = 0,
+    EXACT = 1,
+    PERIOD = 2,
+    RANGE = 3,
+    APPROXIMATE = 4,
+
+    @classmethod
+    def from_date_value(cls, value: str):
+        if value == "Y":
+            return DateType.UNKNOWN
+        if any([value.startswith(prefix) for prefix in period_prefixes]):
+            return DateType.PERIOD
+        if any([value.startswith(prefix) for prefix in range_prefixes]):
+            return DateType.RANGE
+        if any([value.startswith(prefix) for prefix in approximate_prefixes]):
+            return DateType.APPROXIMATE
+        return DateType.EXACT
 
 class DateElement(Element):
-    @staticmethod
-    def __is_a_from_to_statement(date_value):
-        return date_value.startswith("FROM ") and " TO " in date_value
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.date_type = DateType.from_date_value(self.get_value())
 
-    @staticmethod
-    def __is_a_between_and_statement(date_value):
-        return date_value.startswith("BET ") and " AND " in date_value
+    def as_datetime(self) -> datetime:
+        """Returns a datetime object representing the date and time of this element
 
-    @classmethod
-    def __contains_multiple_dates(cls, date_value):
+        :rtype: A datetime object with the date and optionally time
         """
-        Checks to see if the date string provided follows any of the known patterns for date ranges.
-        :type date_value: string
-        :rtype: boolean
-        """
-        if cls.__is_a_between_and_statement(date_value):
-            return True
-        elif cls.__is_a_from_to_statement(date_value):
-            return True
-        else:
-            return False
-
-    @classmethod
-    def __split_date_range(cls, date_value):
-        """
-        Gets the date info out of the provided range.
-        Ex: Turns "BET 1920 AND 1985" into ["1920", "1985"]
-        NOTE: We assume what we're being passed in here has already had leading and trailing white space trimmed.
-        If it hasn't, you may not get just dates.
-        :type date_value: string
-        :rtype: list of string
-        """
-        if cls.__is_a_between_and_statement(date_value):
-            date_value = date_value[4:]
-            return date_value.split(" AND ")
-        elif cls.__is_a_from_to_statement(date_value):
-            date_value = date_value[5:]
-            return date_value.split(" TO ")
-
-    def get_year(self, which_date_to_return_in_a_range=RETURN_SECOND_DATE):
-        """
-        Tries to identify the year associated with this date. If it can't, returns -1. In the event
-        NOTE: By default, this will return the later year in a date range (ex: 1932 for "BET 1922 AND 1932").
-        Since this was the behavior of the code that uses this method before it was refactored into
-        a separate DateElement class, I'm keeping that implementation for backwards compatibility.
-        :type which_date_to_return_in_a_range: string
-        :rtype: int
-        """
-        date_value = self.get_value().strip()
-
-        if self.__contains_multiple_dates(date_value):
-            first_date, second_date = self.__split_date_range(date_value)
-            print(first_date, second_date)
-            if which_date_to_return_in_a_range == RETURN_FIRST_DATE:
-                date_value = first_date
+        if self.date_type == DateType.EXACT:
+            date_len = len(self.get_value().strip().split(" "))
+            if date_len == 3:
+                d = self.__parse_full_date_string(self.get_value())
+            elif date_len == 2:
+                d = self.__parse_month_year_string(self.get_value())
+            elif date_len == 1:
+                d = self.__parse_year_string(self.get_value())
             else:
-                date_value = second_date
+                raise Exception(f"Malformed Date Value: {date_len} {self.get_value()}")
 
-        date_parts = date_value.split()
-        if len(date_parts) == 0:
-            date = ""
-        else:
-            date = date_parts[len(date_parts) - 1]
+            if self.has_time():
+                d.combine(d.date(), self.__parse_time_string(self.get_time().get_value()).time())
+            return d
 
-        if date == "":
-            return -1
-        try:
-            return int(date)
-        except ValueError:
-            return -1
+        elif self.date_type == DateType.PERIOD:
+            return None
+
+        elif self.date_type == DateType.RANGE:
+            return None
+
+        elif self.date_type == DateType.APPROXIMATE:
+            return None
+
+        elif self.date_type == DateType.UNKNOWN:
+            raise Exception("Tried to parse unknown date. Please check with is_unknown before trying to parse")
+
+
+    def is_unknown(self) -> bool:
+        return self.get_value().strip() == "Y"
+
+    def has_time(self) -> bool:
+        return self._is_tag_present(tags.GEDCOM_TAG_TIME)
+
+    def get_time(self) -> TimeElement:
+        return self.get_child_element_by_tag(tags.GEDCOM_TAG_TIME)
+
+    @staticmethod
+    def __parse_full_date_string(value: str) -> datetime:
+        return datetime.strptime(value.strip(), "%d %b %Y")
+
+    @staticmethod
+    def __parse_month_year_string(value: str) -> datetime:
+        return datetime.strptime(value.strip(), "%b %Y")
+
+    @staticmethod
+    def __parse_year_string(value: str) -> datetime:
+        return datetime.strptime(value.strip(), "%Y")
+
+    @staticmethod
+    def __parse_time_string(value: str) -> datetime:
+        return datetime.strptime(value, "%H:%M:%S.%f")

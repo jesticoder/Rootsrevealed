@@ -1,3 +1,4 @@
+from python_gedcom_2 import tags
 from python_gedcom_2.element.date import DateElement
 from python_gedcom_2.element.element import Element
 
@@ -9,11 +10,16 @@ class EventDetail(Element):
     NOTE: This is different from an event element, which is a legitimate GEDCOM tag and has its own rules.
     """
 
-    def get_year_in_date(self):
-        date = -1
+    def has_date(self) -> bool:
+        """Returns True if this EventDetail has a DateElement as a child.
+        """
+        return self._is_tag_present(tags.GEDCOM_TAG_DATE)
 
+    def get_date_element(self) -> DateElement | None:
+        """Returns the DateElement of this EventDetail if it exists.
+        """
         for child in self.get_child_elements():
             if isinstance(child, DateElement):
-                date = child.get_year()
+                return child
 
-        return date
+        return None

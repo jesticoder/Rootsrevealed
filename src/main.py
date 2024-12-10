@@ -9,5 +9,8 @@ elements: List[Element] = parser.get_root_child_elements()
 
 for e in elements:
     
-    if Individual.is_individual(e):
-        print(e)
+    if isinstance(e, IndividualElement):
+        death = e.get_death_element()
+        if not death or not death.has_date():
+            continue
+        print(death.get_date_element().as_datetime())

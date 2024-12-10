@@ -65,6 +65,7 @@ class ElementCreator:
             python_gedcom_2.tags.GEDCOM_TAG_RESIDENCE: "ResidenceElement",
             python_gedcom_2.tags.GEDCOM_TAG_RETIREMENT: "RetirementElement",
             python_gedcom_2.tags.GEDCOM_TAG_SOC_SEC_NUMBER: "SocialSecurityNumberElement",
+            python_gedcom_2.tags.GEDCOM_TAG_TIME: "TimeElement",
             python_gedcom_2.tags.GEDCOM_TAG_TITLE: "TitleElement",
             python_gedcom_2.tags.GEDCOM_TAG_WILL: "WillElement",
         }

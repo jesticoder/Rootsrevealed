@@ -216,14 +216,6 @@ class Element(object):
                 return True
         return False
 
-    @deprecated
-    def get_individual(self):
-        """Returns this element and all of its sub-elements represented as a GEDCOM string
-        ::deprecated:: As of version 1.0.0 use `to_gedcom_string()` method instead
-        :rtype: str
-        """
-        return self.to_gedcom_string(True)
-
     def to_gedcom_string(self, recursive=False):
         """Formats this element and optionally all of its sub-elements into a GEDCOM string
         :type recursive: bool
@@ -250,6 +242,13 @@ class Element(object):
                 result += child_element.to_gedcom_string(True)
 
         return result
+
+    def get_child_element_by_tag(self, tag):
+        if self._is_tag_present(tag):
+            for child in self.get_child_elements():
+                if child.get_tag() == tag:
+                    return child
+        return None
 
     def __str__(self):
         """:rtype: str"""

@@ -1,5 +1,13 @@
 # Python GEDCOM Parser - Changelog
 
+## [v2.0.0](https://pypi.org/project/python-gedcom-2/1.7.0/)
+### Changes:
+- Change DateElement functions to return datetime objects instead of strings.
+- Add get_events method to FamilyElement and IndividualElement classes to get all child elements of EventDetail type.
+- Add utility methods to FamilyElement classes to get all events of a certain type.
+- Removed unused methods from IndividualElement class.
+
+
 ## [v1.7.0](https://pypi.org/project/python-gedcom-2/1.7.0/)
 ### Changes:
 - Add all element classes that can have DateElements in them.

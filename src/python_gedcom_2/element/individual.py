@@ -1,11 +1,12 @@
 """GEDCOM element consisting of tag `gedcom.tags.GEDCOM_TAG_INDIVIDUAL`"""
 
 import re as regex
-from typing import Tuple
+from typing import Tuple, List
 
 from python_gedcom_2.element.death import DeathElement
 from python_gedcom_2.element.element import Element
 import python_gedcom_2.tags
+from python_gedcom_2.element.event_detail import EventDetail
 
 
 class NotAnActualIndividualError(Exception):
@@ -149,20 +150,6 @@ class IndividualElement(Element):
 
         return census
 
-    def get_last_change_date(self) -> str:
-        """Returns the date of when the person data was last changed formatted as a string
-        :rtype: str
-        """
-        date = ""
-
-        for child in self.get_child_elements():
-            if child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_CHANGE:
-                for childOfChild in child.get_child_elements():
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_DATE:
-                        date = childOfChild.get_value()
-
-        return date
-
     def get_occupation(self) -> str:
         """Returns the occupation of a person
         """
@@ -176,3 +163,6 @@ class IndividualElement(Element):
 
     def get_death_element(self) -> DeathElement | None:
         return self.get_child_element_by_tag(python_gedcom_2.tags.GEDCOM_TAG_DEATH)
+
+    def get_events(self) -> List[EventDetail]:
+        return [child for child in self.get_child_elements() if isinstance(child, EventDetail)]

@@ -10,10 +10,18 @@ class EventDetail(Element):
     NOTE: This is different from an event element, which is a legitimate GEDCOM tag and has its own rules.
     """
 
+    __family_event_tags = ["ANUL", "CENS", "DIV", "DIVF", "ENGA", "MARB", "MARC", "MARL", "MARS", "MARR"]
+    __individual_event_tags = ["BIRT", "CHR", "DEAT", "ADOP", 'BURI', 'CREM', 'BAPM', 'BARM', 'BASM', 'BLES', 'CHRA', 'CONF', 'FCOM', 'ORDN', 'NATU', 'EMIG', 'IMMI', 'CENS', 'PROB', 'WILL', 'GRAD', 'RETI']
+
     def has_date(self) -> bool:
         """Returns True if this EventDetail has a DateElement as a child.
         """
         return self._is_tag_present(tags.GEDCOM_TAG_DATE)
+
+    def has_place(self) -> bool:
+        """Returns True if this EventDetail has a place specified as a child.
+        """
+        return self._is_tag_present(tags.GEDCOM_TAG_PLACE)
 
     def get_date_element(self) -> DateElement | None:
         """Returns the DateElement of this EventDetail if it exists.
@@ -23,3 +31,9 @@ class EventDetail(Element):
                 return child
 
         return None
+
+    def is_family_event(self) -> bool:
+        return any([self.get_tag() == tag for tag in EventDetail.__family_event_tags])
+
+    def is_individual_event(self) -> bool:
+        return any([self.get_tag() == tag for tag in EventDetail.__individual_event_tags])

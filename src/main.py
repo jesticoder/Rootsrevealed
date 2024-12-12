@@ -4,10 +4,16 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 
-class SelectorWindow:
+class MainWindow(tk.Tk):
 
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk, parser: Parser, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+        self.parser = parser
         self.root = root
+        container = tk.Frame(self)
+        container.pack(fill="both", expand=True)
+        #https://stackoverflow.com/questions/7546050/switch-between-two-frames-in-tkinter
+        self.show_frame()
         background_image_path = "./images/startbildschirm.1.png"
         self.bg_image = Image.open(background_image_path)
         self.bg_photo = ImageTk.PhotoImage(self.bg_image)
@@ -32,7 +38,8 @@ class SelectorWindow:
             filetypes=[("GEDCOM-Dateien", "*.ged"), ("Alle Dateien", "*.*")]
         )
         if file_path != "":
-            pass
+            self.parser.parse_file(file_path)
+            display = DisplayWindow(self.root, self.parser)
 
     def drop_file(self):
         messagebox.showinfo("Drag-and-Drop", "Datei abgelegt!")
@@ -69,18 +76,26 @@ class SelectorWindow:
         self.choose_file_btn.image = choose_file_photo_resized
         self.choose_file_btn.place(x=btn_x, y=btn_y)
 
+
+class SelectorFrame(tk.Frame):
+    pass
+
+
+class DisplayWindow(tk.Frame):
+    def __init__(self, root: tk.Tk, parser: Parser):
+        self.root = root
+        self.parser = parser
+        self.canvas = tk.Canvas(self.root)
+        print(self.)
+
 if __name__ == "__main__":
 
-    #parser: Parser = Parser()
-
-    #parser.parse_file("./gedcom_files/The English and British Kings and Queens.ged")
-
-    #elements: list[Element] = parser.get_root_child_elements()
+    parser: Parser = Parser()
 
     root = tk.Tk()
     root.title("Roots Revealed - Ancestry Research")
     root.state("zoomed")  # Startet im Fullscreen-Modus
     # Hintergrundbild laden
-    selector = SelectorWindow(root)
+    selector = SelectorWindow(root, parser)
     # Hauptfenster starten
     root.mainloop()

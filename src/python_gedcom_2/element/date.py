@@ -71,7 +71,8 @@ class DateElement(Element):
     def get_time(self) -> TimeElement:
         return self.get_child_element_by_tag(tags.GEDCOM_TAG_TIME)
 
-    def __parse_date_string(self, value) -> datetime:
+    @staticmethod
+    def __parse_date_string(value) -> datetime:
         date_len = len(value.split(" "))
         if date_len == 3:
             d = datetime.strptime(value.strip(), "%d %b %Y")
@@ -80,5 +81,5 @@ class DateElement(Element):
         elif date_len == 1:
             d = datetime.strptime(value.strip(), "%Y")
         else:
-            raise Exception(f"Malformed Date Value: {date_len} {self.get_value()}")
+            raise Exception(f"Malformed Date Value: {date_len} {value}")
         return d

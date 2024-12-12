@@ -33,7 +33,7 @@ class EventDetail(Element):
         return None
 
     def is_family_event(self) -> bool:
-        return any([self.get_tag() == tag for tag in EventDetail.__family_event_tags])
+        return any(self.get_tag() == tag for tag in EventDetail.__family_event_tags)
 
     def is_individual_event(self) -> bool:
-        return any([self.get_tag() == tag for tag in EventDetail.__individual_event_tags])
+        return any(self.get_tag() == tag for tag in EventDetail.__individual_event_tags)

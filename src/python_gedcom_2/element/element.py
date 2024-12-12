@@ -5,11 +5,10 @@ Base GEDCOM element
 from sys import version_info
 
 from python_gedcom_2.element_creator import ElementCreator
-from python_gedcom_2.helpers import deprecated
 import python_gedcom_2.tags
 
 
-class Element(object):
+class Element:
     """GEDCOM element
 
     Each line in a GEDCOM file is an element with the format

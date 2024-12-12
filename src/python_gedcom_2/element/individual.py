@@ -76,14 +76,14 @@ class IndividualElement(Element):
 
                     return given_name, surname
 
-                for childOfChild in child.get_child_elements():
+                for child_of_child in child.get_child_elements():
 
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_GIVEN_NAME:
-                        given_name = childOfChild.get_value()
+                    if child_of_child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_GIVEN_NAME:
+                        given_name = child_of_child.get_value()
                         found_given_name = True
 
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_SURNAME:
-                        surname = childOfChild.get_value()
+                    if child_of_child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_SURNAME:
+                        surname = child_of_child.get_value()
                         found_surname_name = True
 
                 if found_given_name and found_surname_name:
@@ -103,7 +103,7 @@ class IndividualElement(Element):
         :type surname_to_match: str
         :rtype: bool
         """
-        (given_name, surname) = self.get_name()
+        (_, surname) = self.get_name_as_tuple()
         return regex.search(surname_to_match, surname, regex.IGNORECASE)
 
     def given_name_match(self, given_name_to_match):
@@ -111,7 +111,7 @@ class IndividualElement(Element):
         :type given_name_to_match: str
         :rtype: bool
         """
-        (given_name, surname) = self.get_name()
+        (given_name, _) = self.get_name_as_tuple()
         return regex.search(given_name_to_match, given_name, regex.IGNORECASE)
 
     def get_gender(self) -> str:
@@ -127,7 +127,7 @@ class IndividualElement(Element):
         return gender
 
     def get_census_data(self):
-        """Returns a list of censuses of an individual formatted as tuples: (`str` date, `str´ place, `list` sources)
+        """Returns a list of censuses of an individual formatted as tuples: (`str` date, `str` place, `list` sources)
         :rtype: list of tuple
         """
         census = []
@@ -139,16 +139,16 @@ class IndividualElement(Element):
                 place = ''
                 sources = []
 
-                for childOfChild in child.get_child_elements():
+                for child_of_child in child.get_child_elements():
 
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_DATE:
-                        date = childOfChild.get_value()
+                    if child_of_child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_DATE:
+                        date = child_of_child.get_value()
 
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_PLACE:
-                        place = childOfChild.get_value()
+                    if child_of_child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_PLACE:
+                        place = child_of_child.get_value()
 
-                    if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_SOURCE:
-                        sources.append(childOfChild.get_value())
+                    if child_of_child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_SOURCE:
+                        sources.append(child_of_child.get_value())
 
                 census.append((date, place, sources))
 

@@ -1,5 +1,6 @@
-from python_gedcom_2.element.element import Element
 from datetime import datetime, time
+from python_gedcom_2.element.element import Element
+
 
 class TimeElement(Element):
     def as_datetime(self) -> datetime:

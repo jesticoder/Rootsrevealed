@@ -30,11 +30,11 @@ class DateType(Enum):
     def from_date_value(cls, value: str):
         if value == "Y":
             return DateType.UNKNOWN
-        if any([value.startswith(prefix) for prefix in period_prefixes]):
+        if any(value.startswith(prefix) for prefix in period_prefixes):
             return DateType.PERIOD
-        if any([value.startswith(prefix) for prefix in range_prefixes]):
+        if any(value.startswith(prefix) for prefix in range_prefixes):
             return DateType.RANGE
-        if any([value.startswith(prefix) for prefix in approximate_prefixes]):
+        if any(value.startswith(prefix) for prefix in approximate_prefixes):
             return DateType.APPROXIMATE
         return DateType.EXACT
 
@@ -53,14 +53,13 @@ class DateElement(Element):
             if self.has_time():
                 d.combine(d.date(), self.get_time().as_time())
             return d
-        elif self.date_type == DateType.APPROXIMATE:
+        if self.date_type == DateType.APPROXIMATE:
             d = self.__parse_date_string(self.get_value()[3:].strip())
             if self.has_time():
                 d.combine(d.date(), self.get_time().as_time())
             return d
 
-        else:
-            raise Exception(f"DateElement '{self}' of type '{self.date_type}' cannot be represented as a single date.")
+        raise Exception(f"DateElement '{self}' of type '{self.date_type}' cannot be represented as a single date.")
 
     def is_unknown(self) -> bool:
         return self.get_value().strip() == "Y"

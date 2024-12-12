@@ -4,13 +4,12 @@ which can in return be manipulated.
 """
 
 import re as regex
-from sys import version_info
+from sys import version_info, stdout
 from typing import List, Tuple
 
 from python_gedcom_2.element_creator import ElementCreator
-
 from python_gedcom_2.element.element import Element
-from python_gedcom_2.element.family import FamilyElement, NotAnActualFamilyError
+from python_gedcom_2.element.family import FamilyElement
 from python_gedcom_2.element.individual import IndividualElement, NotAnActualIndividualError
 from python_gedcom_2.element.root import RootElement
 import python_gedcom_2.tags
@@ -30,7 +29,7 @@ class PointerNotFoundException(Exception):
     pass
 
 
-class Parser(object):
+class Parser:
     """Parses and manipulates GEDCOM 5.5 format data
 
     For documentation of the GEDCOM 5.5 format, see: https://homepages.rootsweb.com/~pmcbride/gedcom/55gctoc.htm
@@ -179,7 +178,7 @@ class Parser(object):
 
         if regex_match is None:
             if strict:
-                error_message = ("Line <%d:%s> of document violates GEDCOM format 5.5" % (line_number, line)
+                error_message = (f"Line <{line_number}:{line}> of document violates GEDCOM format 5.5"
                                  + "\nSee: https://chronoplexsoftware.com/gedcomvalidator/gedcom/gedcom-5.5.pdf")
                 raise GedcomFormatViolationError(error_message)
             else:
@@ -222,7 +221,7 @@ class Parser(object):
 
         # Check level: should never be more than one higher than previous line.
         if level > last_element.get_level() + 1:
-            error_message = ("Line %d of document violates GEDCOM format 5.5" % line_number
+            error_message = (f"Line {line_number} of document violates GEDCOM format 5.5"
                              + "\nLines must be no more than one level higher than previous line."
                              + "\nSee: https://chronoplexsoftware.com/gedcomvalidator/gedcom/gedcom-5.5.pdf")
             raise GedcomFormatViolationError(error_message)
@@ -257,7 +256,7 @@ class Parser(object):
         marriages = []
         if not isinstance(individual, IndividualElement):
             raise NotAnActualIndividualError(
-                "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
+                f"Operation only valid for elements with {python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL} tag"
             )
         # Get and analyze families where individual is spouse.
         families = self.get_families(individual, python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
@@ -273,55 +272,6 @@ class Parser(object):
                             place = marriage_data.get_value()
                     marriages.append((date, place))
         return marriages
-
-    def get_marriage_years(self, individual: IndividualElement) -> List[int]:
-        """Returns a list of marriage years (as integers) for an individual
-        """
-        dates = []
-
-        if not isinstance(individual, IndividualElement):
-            raise NotAnActualIndividualError(
-                "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
-            )
-
-        # Get and analyze families where individual is spouse.
-        families = self.get_families(individual, python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE)
-        for family in families:
-            for child in family.get_child_elements():
-                if child.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_MARRIAGE:
-                    for childOfChild in child.get_child_elements():
-                        if childOfChild.get_tag() == python_gedcom_2.tags.GEDCOM_TAG_DATE:
-                            date = childOfChild.get_value().split()[-1]
-                            try:
-                                dates.append(int(date))
-                            except ValueError:
-                                pass
-        return dates
-
-    def marriage_year_match(self, individual: IndividualElement, year: int) -> bool:
-        """Checks if one of the marriage years of an individual matches the supplied year.
-        """
-        if not isinstance(individual, IndividualElement):
-            raise NotAnActualIndividualError(
-                "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
-            )
-
-        years = self.get_marriage_years(individual)
-        return year in years
-
-    def marriage_range_match(self, individual: IndividualElement, from_year: int, to_year: int) -> bool:
-        """Check if one of the marriage years of an individual is in a given range. Years are integers.
-        """
-        if not isinstance(individual, IndividualElement):
-            raise NotAnActualIndividualError(
-                "Operation only valid for elements with %s tag" % python_gedcom_2.tags.GEDCOM_TAG_INDIVIDUAL
-            )
-
-        years = self.get_marriage_years(individual)
-        for year in years:
-            if from_year <= year <= to_year:
-                return True
-        return False
 
     def get_families(self, individual: IndividualElement, family_type=python_gedcom_2.tags.GEDCOM_TAG_FAMILY_SPOUSE) -> List[FamilyElement]:
         """Return family elements listed for an individual
@@ -434,12 +384,12 @@ class Parser(object):
 
         if path[-1].get_pointer() == ancestor.get_pointer():
             return path
-        else:
-            parents = self.get_parents(descendant)
-            for parent in parents:
-                potential_path = self.find_path_to_ancestor(parent, ancestor, path + [parent])
-                if potential_path is not None:
-                    return potential_path
+
+        parents = self.get_parents(descendant)
+        for parent in parents:
+            potential_path = self.find_path_to_ancestor(parent, ancestor, path + [parent])
+            if potential_path is not None:
+                return potential_path
 
         return None
 
@@ -453,7 +403,6 @@ class Parser(object):
 
     def print_gedcom(self):
         """Write GEDCOM data to stdout"""
-        from sys import stdout
         self.save_gedcom(stdout)
 
     def save_gedcom(self, open_file):

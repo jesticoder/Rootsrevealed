@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from python_gedcom_2.parser import Parser
+from python_gedcom_2.element.individual import IndividualElement
 
 
 class MainWindow(tk.Tk):
@@ -135,8 +136,19 @@ class DisplayFrame(tk.Frame):
         data_text = tk.Text(self, wrap="word", width=80, height=20, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
         data_text.pack(pady=10)
 
+        children: list[tuple[IndividualElement, int]] = []
+
         for element in root_elements:
-            data_text.insert("end", str(element) + "\n")
+            if isinstance(element, IndividualElement):
+                if not element.is_child_in_a_family():
+                    children.append((element, 0))
+
+        while len(children) > 0:
+            indiv, level = children.pop(0)
+            data_text.insert(tk.END, f"{'   ' * level}{indiv.get_name()}\n")
+            c: list[IndividualElement] = self.controller.parser.get_natural_children(indiv)
+            for child in c:
+                children.insert(0, (child, level + 1))
 
 
 if __name__ == "__main__":

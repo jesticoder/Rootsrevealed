@@ -133,7 +133,7 @@ class DisplayFrame(tk.Frame):
         display_label = tk.Label(self, text="Parsed GEDCOM Data:", font=("Arial", 16), bg="#36312D", fg="#FFFFFF")
         display_label.pack(pady=20)
 
-        data_text = tk.Text(self, wrap="word", width=80, height=20, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
+        data_text = tk.Text(self, wrap="word", width=80, height=parent.winfo_height(), bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
         data_text.pack(pady=10)
 
         children: list[tuple[IndividualElement, int]] = []

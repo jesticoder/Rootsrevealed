@@ -52,6 +52,7 @@ class SelectorFrame(tk.Frame):
         event = type('event', (object,), {'width': self.button_canvas.winfo_width(), 'height': self.button_canvas.winfo_height()})
         self.resize_elements(event)
 
+
     def choose_file(self):
         file_path = filedialog.askopenfilename(
             title="Wähle eine GEDCOM-Datei aus",

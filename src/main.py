@@ -224,7 +224,7 @@ class DisplayFrame(tk.Frame):
         search_button.place(x=400, y=47, width=60, height=30)  # Button weiter nach rechts verschoben
 
     def perform_search(self):
-        """Führt die Suche nach einem Namen aus."""
+        """Führt die Suche nach einem Namen aus und zeigt die Baumstruktur an."""
         query = self.search_var.get().strip().lower()
         self.result_area.delete(1.0, tk.END)  # Lösche vorherige Ergebnisse
 
@@ -247,18 +247,44 @@ class DisplayFrame(tk.Frame):
             self.result_area.insert(tk.END, "Kein passender Name gefunden.\n")
 
     def check_name(self, individual, query, level, seen_names):
-        """Überprüft, ob der Name des Individuums zur Suchanfrage passt."""
+        """Überprüft, ob der Name des Individuums zur Suchanfrage passt und stellt die Baumstruktur dar."""
         name = individual.get_name().lower()
         
-        # Verhindert doppelte Ergebnisse
+        # Wenn der Name übereinstimmt und noch nicht in den Ergebnissen ist
         if query in name and name not in seen_names:
             self.search_results.append(f"{'   ' * level}{individual.get_name()}")
-            seen_names.add(name)  # Füge den Namen zum Set hinzu, um Duplikate zu vermeiden
+            seen_names.add(name)
+
+            # Eltern und Geschwister anzeigen
+            self.display_family(individual, level)
 
         # Suche rekursiv bei Kindern
         children = self.controller.parser.get_natural_children(individual)
         for child in children:
             self.check_name(child, query, level + 1, seen_names)
+
+    def display_family(self, individual, level):
+        """Zeigt die Familie der gesuchten Person (Eltern und Geschwister) an."""
+        # Eltern finden
+        parents = self.controller.parser.get_parents(individual)
+        if parents:
+            self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Eltern:\n")
+            for parent in parents:
+                self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{parent.get_name()}\n")
+
+            # Geschwister finden (Kinder der Eltern)
+            siblings = []
+            for parent in parents:
+                siblings.extend(self.controller.parser.get_natural_children(parent))
+
+            if siblings:
+                self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Geschwister:\n")
+                for sibling in siblings:
+                    if sibling != individual:  # Geschwister dürfen nicht die gesuchte Person sein
+                        self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{sibling.get_name()}\n")
+
+        else:
+            self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Keine Eltern gefunden.\n")
 
 
 

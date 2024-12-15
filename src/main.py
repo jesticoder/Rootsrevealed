@@ -133,7 +133,7 @@ class DisplayFrame(tk.Frame):
         self.create_search_bar()
 
         # Bereich für die Suchergebnisse
-        self.result_area = tk.Text(self, wrap="word", height=50, width=80, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
+        self.result_area = tk.Text(self, wrap="word", height=45, width=80, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
         self.result_area.pack(pady=20)
 
         # Initiale Anzeige der Namen
@@ -234,9 +234,10 @@ class DisplayFrame(tk.Frame):
 
         # Suche nach passenden Namen in den GEDCOM-Daten
         self.search_results = []
+        seen_names = set()  # Set zum Speichern bereits gefundener Namen
         for element in self.root_elements:
             if isinstance(element, IndividualElement):
-                self.check_name(element, query, 0)
+                self.check_name(element, query, 0, seen_names)
 
         # Ergebnisse anzeigen
         if self.search_results:
@@ -245,16 +246,20 @@ class DisplayFrame(tk.Frame):
         else:
             self.result_area.insert(tk.END, "Kein passender Name gefunden.\n")
 
-    def check_name(self, individual, query, level):
+    def check_name(self, individual, query, level, seen_names):
         """Überprüft, ob der Name des Individuums zur Suchanfrage passt."""
         name = individual.get_name().lower()
-        if query in name:
+        
+        # Verhindert doppelte Ergebnisse
+        if query in name and name not in seen_names:
             self.search_results.append(f"{'   ' * level}{individual.get_name()}")
+            seen_names.add(name)  # Füge den Namen zum Set hinzu, um Duplikate zu vermeiden
 
         # Suche rekursiv bei Kindern
         children = self.controller.parser.get_natural_children(individual)
         for child in children:
-            self.check_name(child, query, level + 1)
+            self.check_name(child, query, level + 1, seen_names)
+
 
 
 

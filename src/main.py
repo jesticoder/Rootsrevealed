@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw, ImageFont
 from python_gedcom_2.parser import Parser
 from python_gedcom_2.element.individual import IndividualElement
-
+from tkinter import PhotoImage, StringVar
 
 class MainWindow(tk.Tk):
     def __init__(self, parser: Parser, *args, **kwargs):
@@ -122,33 +122,146 @@ class SelectorFrame(tk.Frame):
         if canvas_w > 0 and canvas_h > 0:
             self.draw_rounded_rect_button(canvas_w, canvas_h)
 
+class EditingMenuFrame(tk.Frame):
+    def __init__(self, parent: tk.Frame, controller: MainWindow):
+        super().__init__(parent, bg="#36312D")
+        self.controller = controller
+
+        title_label = tk.Label(self, text="Edit Family Tree", font=("Arial", 20, "bold"), bg="#36312D", fg="#FFFFFF")
+        title_label.pack(pady=20)
+
+        btn_add = tk.Button(self, text="Add Individual", command=self.add_individual, bg="#A48164", fg="#FFFFFF")
+        btn_add.pack(pady=10)
+
+        btn_delete = tk.Button(self, text="Delete Individual", command=self.delete_individual, bg="#A48164", fg="#FFFFFF")
+        btn_delete.pack(pady=10)
+
+        btn_modify = tk.Button(self, text="Modify Individual", command=self.modify_individual, bg="#A48164", fg="#FFFFFF")
+        btn_modify.pack(pady=10)
+
+        btn_back = tk.Button(self, text="Back", command=lambda: controller.show_frame(SelectorFrame), bg="#BF9874", fg="#FFFFFF")
+        btn_back.pack(pady=20)
+
+    def add_individual(self):
+        messagebox.showinfo("Add", "Functionality to add an individual.")
+
+    def delete_individual(self):
+        messagebox.showinfo("Delete", "Functionality to delete an individual.")
+
+    def modify_individual(self):
+        messagebox.showinfo("Modify", "Functionality to modify an individual.")
+
 
 class DisplayFrame(tk.Frame):
     def __init__(self, parent: tk.Frame, controller: MainWindow):
         super().__init__(parent, bg="#36312D")
         self.controller = controller
+        self.root_elements = controller.parser.get_root_child_elements()
+        self.search_results = []
 
-        root_elements = controller.parser.get_root_child_elements()
+        # Erstelle die Suchleiste
+        self.create_search_bar()
 
-        display_label = tk.Label(self, text="Parsed GEDCOM Data:", font=("Arial", 16), bg="#36312D", fg="#FFFFFF")
-        display_label.pack(pady=20)
+        # Bereich für die Suchergebnisse
+        self.result_area = tk.Text(self, wrap="word", height=20, width=80, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
+        self.result_area.pack(pady=20)
 
-        data_text = tk.Text(self, wrap="word", width=80, height=parent.winfo_height(), bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
-        data_text.pack(pady=10)
+    
 
-        children: list[tuple[IndividualElement, int]] = []
+    def create_search_bar(self):
+        """Erstellt eine Suchleiste, bei der das Bild als Hintergrund dient."""
+        search_frame = tk.Frame(self, bg="#36312D")
+        search_frame.pack(pady=20)
 
-        for element in root_elements:
+        # Bild vorbereiten: Skalieren und ggf. Text hinzufügen
+        try:
+            # Bild laden und skalieren
+            image = Image.open("images/Suche ohne Text.png")
+            new_size = (500, 150)  # Breite x Höhe des Suchleisten-Bildes
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+
+            # Text optional hinzufügen
+            draw = ImageDraw.Draw(image)
+            font_path = "arial.ttf"
+            font_size = 20
+            try:
+                font = ImageFont.truetype(font_path, font_size)
+            except:
+                font = ImageFont.load_default()
+
+            # Konvertiere zu PhotoImage
+            self.search_bar_image = ImageTk.PhotoImage(image)
+        except Exception as e:
+            print(f"Fehler beim Bearbeiten des Bildes: {e}")
+            messagebox.showerror("Fehler", "Suchleisten-Bild konnte nicht geladen werden.")
+            return
+
+        # Canvas erstellen, um das Bild zu platzieren
+        canvas = tk.Canvas(search_frame, width=new_size[0], height=new_size[1], bg="#36312D", highlightthickness=0)
+        canvas.pack()
+
+        # Hintergrundbild einfügen
+        canvas.create_image(0, 0, anchor="nw", image=self.search_bar_image)
+
+        # Eingabefeld (Entry) auf dem Bild platzieren
+        self.search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            search_frame,
+            textvariable=self.search_var,
+            font=("Arial", 14),
+            bg="#58504E",  # Transparenter Hintergrund
+            fg="white",  # Textfarbe
+            bd=0,  # Keine Umrandung
+            highlightthickness=0,  # Keine Highlightumrandung
+            insertbackground="#000000"  # Cursorfarbe
+        )
+        search_entry.place(x=80, y=40, width=300, height=50)  # Positioniere das Eingabefeld auf dem Bild
+
+        # Such-Button auf der rechten Seite des Bildes, weiter nach rechts verschoben
+        search_button = tk.Button(
+            search_frame,
+            text="Suchen",
+            command=self.perform_search,
+            bg="#2F4F4F",
+            fg="white",
+            font=("Arial", 12, "bold"),
+            bd=0
+        )
+        search_button.place(x=400, y=47, width=60, height=30)  # Button weiter nach rechts verschoben
+
+    def perform_search(self):
+        """Führt die Suche nach einem Namen aus."""
+        query = self.search_var.get().strip().lower()
+        self.result_area.delete(1.0, tk.END)  # Lösche vorherige Ergebnisse
+
+        if not query:
+            self.result_area.insert(tk.END, "Bitte gib einen Namen ein.\n")
+            return
+
+        # Suche nach passenden Namen in den GEDCOM-Daten
+        self.search_results = []
+        for element in self.root_elements:
             if isinstance(element, IndividualElement):
-                if not element.is_child_in_a_family():
-                    children.append((element, 0))
+                self.check_name(element, query, 0)
 
-        while len(children) > 0:
-            indiv, level = children.pop(0)
-            data_text.insert(tk.END, f"{'   ' * level}{indiv.get_name()}\n")
-            c: list[IndividualElement] = self.controller.parser.get_natural_children(indiv)
-            for child in c:
-                children.insert(0, (child, level + 1))
+        # Ergebnisse anzeigen
+        if self.search_results:
+            for result in self.search_results:
+                self.result_area.insert(tk.END, result + "\n")
+        else:
+            self.result_area.insert(tk.END, "Kein passender Name gefunden.\n")
+
+    def check_name(self, individual, query, level):
+        """Überprüft, ob der Name des Individuums zur Suchanfrage passt."""
+        name = individual.get_name().lower()
+        if query in name:
+            self.search_results.append(f"{'   ' * level}{individual.get_name()}")
+
+        # Suche rekursiv bei Kindern
+        children = self.controller.parser.get_natural_children(individual)
+        for child in children:
+            self.check_name(child, query, level + 1)
+
 
 
 if __name__ == "__main__":

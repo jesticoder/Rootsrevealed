@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk, ImageDraw, ImageFont
 from python_gedcom_2.parser import Parser
 from python_gedcom_2.element.individual import IndividualElement
-from tkinter import PhotoImage, StringVar
+
 
 class MainWindow(tk.Tk):
     def __init__(self, parser: Parser, *args, **kwargs):
@@ -53,21 +53,20 @@ class SelectorFrame(tk.Frame):
         event = type('event', (object,), {'width': self.button_canvas.winfo_width(), 'height': self.button_canvas.winfo_height()})
         self.resize_elements(event)
 
-
     def choose_file(self):
         file_path = filedialog.askopenfilename(
             title="Wähle eine GEDCOM-Datei aus",
             filetypes=[("GEDCOM-Dateien", "*.ged"), ("Alle Dateien", "*.*")]
         )
         if file_path:
-            self.controller.parser.parse_file(file_path)
-            self.controller.show_frame(DisplayFrame)
+            try:
+                self.controller.parser.parse_file(file_path)
+                self.controller.show_frame(DisplayFrame)
+            except Exception as e:
+                messagebox.showerror("Fehler", f"Fehler beim Laden der Datei: {e}")
 
     def on_button_click(self, event):
         self.choose_file()
-
-    def drop_file(self):
-        messagebox.showinfo("Drag-and-Drop", "Datei abgelegt!")
 
     def draw_rounded_rect_button(self, canvas_width, canvas_height):
         self.button_canvas.delete("all")
@@ -97,16 +96,16 @@ class SelectorFrame(tk.Frame):
         )
 
     def _draw_rounded_rect(self, canvas, x1, y1, x2, y2, r, color):
-        canvas.create_arc(x1, y1, x1+2*r, y1+2*r, start=90, extent=90, fill=color, outline=color)
-        canvas.create_arc(x2-2*r, y1, x2, y1+2*r, start=0, extent=90, fill=color, outline=color)
-        canvas.create_arc(x1, y2-2*r, x1+2*r, y2, start=180, extent=90, fill=color, outline=color)
-        canvas.create_arc(x2-2*r, y2-2*r, x2, y2, start=270, extent=90, fill=color, outline=color)
+        canvas.create_arc(x1, y1, x1 + 2 * r, y1 + 2 * r, start=90, extent=90, fill=color, outline=color)
+        canvas.create_arc(x2 - 2 * r, y1, x2, y1 + 2 * r, start=0, extent=90, fill=color, outline=color)
+        canvas.create_arc(x1, y2 - 2 * r, x1 + 2 * r, y2, start=180, extent=90, fill=color, outline=color)
+        canvas.create_arc(x2 - 2 * r, y2 - 2 * r, x2, y2, start=270, extent=90, fill=color, outline=color)
 
-        canvas.create_rectangle(x1+r, y1, x2-r, y1+r, fill=color, outline=color)
-        canvas.create_rectangle(x1+r, y2-r, x2-r, y2, fill=color, outline=color)
-        canvas.create_rectangle(x1, y1+r, x1+r, y2-r, fill=color, outline=color)
-        canvas.create_rectangle(x2-r, y1+r, x2, y2-r, fill=color, outline=color)
-        canvas.create_rectangle(x1+r, y1+r, x2-r, y2-r, fill=color, outline=color)
+        canvas.create_rectangle(x1 + r, y1, x2 - r, y1 + r, fill=color, outline=color)
+        canvas.create_rectangle(x1 + r, y2 - r, x2 - r, y2, fill=color, outline=color)
+        canvas.create_rectangle(x1, y1 + r, x1 + r, y2 - r, fill=color, outline=color)
+        canvas.create_rectangle(x2 - r, y1 + r, x2, y2 - r, fill=color, outline=color)
+        canvas.create_rectangle(x1 + r, y1 + r, x2 - r, y2 - r, fill=color, outline=color)
 
     def resize_elements(self, event):
         width = self.winfo_width()
@@ -122,35 +121,6 @@ class SelectorFrame(tk.Frame):
         if canvas_w > 0 and canvas_h > 0:
             self.draw_rounded_rect_button(canvas_w, canvas_h)
 
-class EditingMenuFrame(tk.Frame):
-    def __init__(self, parent: tk.Frame, controller: MainWindow):
-        super().__init__(parent, bg="#36312D")
-        self.controller = controller
-
-        title_label = tk.Label(self, text="Edit Family Tree", font=("Arial", 20, "bold"), bg="#36312D", fg="#FFFFFF")
-        title_label.pack(pady=20)
-
-        btn_add = tk.Button(self, text="Add Individual", command=self.add_individual, bg="#A48164", fg="#FFFFFF")
-        btn_add.pack(pady=10)
-
-        btn_delete = tk.Button(self, text="Delete Individual", command=self.delete_individual, bg="#A48164", fg="#FFFFFF")
-        btn_delete.pack(pady=10)
-
-        btn_modify = tk.Button(self, text="Modify Individual", command=self.modify_individual, bg="#A48164", fg="#FFFFFF")
-        btn_modify.pack(pady=10)
-
-        btn_back = tk.Button(self, text="Back", command=lambda: controller.show_frame(SelectorFrame), bg="#BF9874", fg="#FFFFFF")
-        btn_back.pack(pady=20)
-
-    def add_individual(self):
-        messagebox.showinfo("Add", "Functionality to add an individual.")
-
-    def delete_individual(self):
-        messagebox.showinfo("Delete", "Functionality to delete an individual.")
-
-    def modify_individual(self):
-        messagebox.showinfo("Modify", "Functionality to modify an individual.")
-
 
 class DisplayFrame(tk.Frame):
     def __init__(self, parent: tk.Frame, controller: MainWindow):
@@ -163,10 +133,34 @@ class DisplayFrame(tk.Frame):
         self.create_search_bar()
 
         # Bereich für die Suchergebnisse
-        self.result_area = tk.Text(self, wrap="word", height=20, width=80, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
+        self.result_area = tk.Text(self, wrap="word", height=50, width=80, bg="#36312D", fg="#FFFFFF", insertbackground="#FFFFFF")
         self.result_area.pack(pady=20)
 
-    
+        # Initiale Anzeige der Namen
+        self.display_names()
+
+    def display_names(self):
+        """Zeigt alle Namen der Individuen an, basierend auf der GEDCOM-Datenstruktur."""
+        self.result_area.delete(1.0, tk.END)  # Löscht vorherige Ergebnisse
+        children = []
+
+        # Alle Individuen durchlaufen und ihre Namen anzeigen
+        for element in self.root_elements:
+            if isinstance(element, IndividualElement):
+                if not element.is_child_in_a_family():
+                    children.append((element, 0))  # (Individuum, Hierarchieebene)
+
+        # Namen der Individuen anzeigen
+        while len(children) > 0:
+            indiv, level = children.pop(0)
+
+            # Namen anzeigen, mit Einrückung je nach Hierarchieebene
+            self.result_area.insert(tk.END, f"{'   ' * level}{indiv.get_name()}\n")
+
+            # Kinder hinzufügen, um sie später anzuzeigen
+            c = self.controller.parser.get_natural_children(indiv)
+            for child in c:
+                children.insert(0, (child, level + 1))  # Kinder zur Anzeige anfügen
 
     def create_search_bar(self):
         """Erstellt eine Suchleiste, bei der das Bild als Hintergrund dient."""
@@ -261,6 +255,8 @@ class DisplayFrame(tk.Frame):
         children = self.controller.parser.get_natural_children(individual)
         for child in children:
             self.check_name(child, query, level + 1)
+
+
 
 
 

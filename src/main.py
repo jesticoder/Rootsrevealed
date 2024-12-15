@@ -289,6 +289,8 @@ class DisplayFrame(tk.Frame):
                 for sibling in siblings:
                     if sibling != individual:  # Geschwister dürfen nicht die gesuchte Person sein
                         self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{sibling.get_name()}\n")
+            else:
+                self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Keine Geschwister gefunden.\n")
         else:
             self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Keine Eltern gefunden.\n")
 

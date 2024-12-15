@@ -264,27 +264,42 @@ class DisplayFrame(tk.Frame):
             self.check_name(child, query, level + 1, seen_names)
 
     def display_family(self, individual, level):
-        """Zeigt die Familie der gesuchten Person (Eltern und Geschwister) an."""
+        """Zeigt die Familie der gesuchten Person (Eltern, Geschwister und Kinder) an."""
         # Eltern finden
         parents = self.controller.parser.get_parents(individual)
+        
         if parents:
             self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Eltern:\n")
+            
+            # Überprüfen, ob Eltern existieren und nicht None sind
             for parent in parents:
-                self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{parent.get_name()}\n")
-
+                if parent:  # Sicherstellen, dass der Elternteil nicht None ist
+                    self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{parent.get_name()}\n")
+                else:
+                    self.result_area.insert(tk.END, f"{'   ' * (level + 2)}Unbekannter Elternteil\n")
+            
             # Geschwister finden (Kinder der Eltern)
             siblings = []
             for parent in parents:
-                siblings.extend(self.controller.parser.get_natural_children(parent))
+                if parent:  # Sicherstellen, dass der Elternteil nicht None ist
+                    siblings.extend(self.controller.parser.get_natural_children(parent))
 
             if siblings:
                 self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Geschwister:\n")
                 for sibling in siblings:
                     if sibling != individual:  # Geschwister dürfen nicht die gesuchte Person sein
                         self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{sibling.get_name()}\n")
-
         else:
             self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Keine Eltern gefunden.\n")
+
+        # Kinder finden (Individuen, die natürliche Kinder der gesuchten Person sind)
+        children = self.controller.parser.get_natural_children(individual)
+        if children:
+            self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Kinder:\n")
+            for child in children:
+                self.result_area.insert(tk.END, f"{'   ' * (level + 2)}{child.get_name()}\n")
+        else:
+            self.result_area.insert(tk.END, f"{'   ' * (level + 1)}Keine Kinder gefunden.\n")
 
 
 
